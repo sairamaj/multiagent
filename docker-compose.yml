@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mulagent:
+    build: .
+    container_name: mulagent-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_MODEL=${AZURE_OPENAI_MODEL:-gpt-4}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2024-02-01}
+      - AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      - AZURE_DEVOPS_ORG=${AZURE_DEVOPS_ORG}
+      - AZURE_DEVOPS_PAT=${AZURE_DEVOPS_PAT}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

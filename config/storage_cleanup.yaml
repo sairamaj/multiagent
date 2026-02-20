@@ -1,0 +1,127 @@
+# Storage Blob Cleanup Configuration
+# This file contains blob retention policies and cleanup rules
+
+# Blob Retention Policies by Artifact Type
+blob_retention:
+  # CI Build Artifacts
+  ci_artifacts:
+    description: "Compiled build artifacts from CI pipelines"
+    keep_latest_count: 5
+    age_threshold_days: 90
+    size_limit_gb: 100
+    pattern: "*.zip"
+    containers:
+      - "ci-builds"
+      - "build-artifacts"
+  
+  # Build Logs
+  build_logs:
+    description: "Build and deployment logs"
+    keep_latest_count: 10
+    age_threshold_days: 30
+    pattern: "*.log"
+    containers:
+      - "build-logs"
+      - "deployment-logs"
+  
+  # VM Images
+  vm_images:
+    description: "Virtual machine disk images"
+    keep_latest_count: 3
+    age_threshold_days: 60
+    match_pattern: "vhds-ci-wat-template-*"
+    size_limit_gb: 500
+    containers:
+      - "vm-images"
+      - "templates"
+  
+  # Test Results
+  test_results:
+    description: "Automated test results and reports"
+    keep_latest_count: 20
+    age_threshold_days: 45
+    pattern: "*.xml"
+    containers:
+      - "test-results"
+  
+  # Docker Images
+  docker_images:
+    description: "Docker container images"
+    keep_latest_count: 5
+    age_threshold_days: 60
+    pattern: "*.tar.gz"
+    containers:
+      - "docker-registry"
+
+# Storage Account Configuration
+storage_accounts:
+  - name: "devopsartifacts"
+    resource_group: "rg-ci-templates"
+    containers:
+      - "ci-builds"
+      - "templates"
+      - "build-logs"
+  
+  - name: "backupstore"
+    resource_group: "rg-backups"
+    containers:
+      - "vm-images"
+      - "database-backups"
+  
+  - name: "testartifacts"
+    resource_group: "rg-ci-templates"
+    containers:
+      - "test-results"
+      - "coverage-reports"
+
+# Cleanup Schedule
+cleanup_schedule:
+  # Run cleanup daily at this hour (UTC)
+  daily_run_hour: 2  # 2 AM UTC
+  
+  # Days of week to run (0 = Monday, 6 = Sunday)
+  run_on_days: [0, 2, 4]  # Mon, Wed, Fri
+  
+  # Enable scheduled cleanup
+  enabled: true
+  
+  # Notification settings
+  notify_on_completion: true
+  notification_email: "devops-team@example.com"
+
+# Safety Settings
+safety:
+  # Require confirmation for destructive operations
+  require_confirmation: true
+  
+  # Dry run mode - log what would be deleted without actually deleting
+  dry_run: false
+  
+  # Maximum number of blobs to delete in a single run
+  max_delete_batch_size: 100
+  
+  # Always keep at least this many versions
+  minimum_versions_to_keep: 2
+  
+  # Exclude blobs with these tags
+  exclude_tags:
+    - "permanent"
+    - "protected"
+    - "compliance-hold"
+
+# Monitoring and Reporting
+monitoring:
+  # Track storage usage and trends
+  track_storage_metrics: true
+  
+  # Generate cleanup reports
+  generate_reports: true
+  
+  # Report format (json, csv, html)
+  report_format: "json"
+  
+  # Store reports in this container
+  report_container: "cleanup-reports"
+  
+  # Retention period for reports (days)
+  report_retention_days: 90
